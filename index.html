@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Node | Réseau de Collaboration Locale</title>
+    <!-- Tailwind CSS pour le style -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React et ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel pour compiler le JSX dans le navigateur -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons pour les icônes -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        :root {
+            --bg-dark: #020617;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+        }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .badge-glow {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Composant Icon utilitaire pour Lucide
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const iconRef = useRef(null);
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
+        };
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('hub');
+            const [userXP, setUserXP] = useState(150);
+            const [messages, setMessages] = useState([
+                { id: 1, sender: "Amadou", text: "Quelqu'un est dispo pour l'audit Wi-Fi à la Médina ?", time: "10:30", loc: "Médina" },
+                { id: 2, sender: "Fatou", text: "Je peux aider pour la partie config !", time: "10:35", loc: "Plateau" }
+            ]);
+            const [projects, setProjects] = useState([
+                { id: 1, title: "Sécurité Mairie", desc: "Audit de sécurité du réseau public.", status: "En cours", lead: "Moussa" },
+                { id: 2, title: "Code Kids", desc: "Atelier d'initiation Python pour les jeunes.", status: "Ouvert", lead: "Sarah" }
+            ]);
+            const [badges, setBadges] = useState([
+                { id: 1, title: "Pionnier", icon: "award", color: "text-amber-500" },
+                { id: 2, title: "Bâtisseur", icon: "hammer", color: "text-blue-500" }
+            ]);
+
+            const sendMessage = (e) => {
+                e.preventDefault();
+                const text = e.target.msg.value;
+                if (!text) return;
+                setMessages([...messages, { 
+                    id: Date.now(), 
+                    sender: "Moi", 
+                    text, 
+                    time: "Maintenant", 
+                    loc: "Local" 
+                }]);
+                e.target.reset();
+            };
+
+            const completeProject = (id) => {
+                setProjects(projects.map(p => p.id === id ? { ...p, status: "Terminé" } : p));
+                setUserXP(prev => prev + 100);
+                if (!badges.find(b => b.title === "Expert")) {
+                    setBadges([...badges, { id: Date.now(), title: "Expert", icon: "shield-check", color: "text-emerald-500" }]);
+                }
+            };
+
+            return (
+                <div className="flex flex-col h-screen">
+                    {/* Header */}
+                    <header className="glass-panel border-b border-white/5 p-4 sticky top-0 z-50">
+                        <div className="max-w-6xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+                                    <Icon name="shield" size={24} />
+                                </div>
+                                <h1 className="text-xl font-extrabold uppercase tracking-tighter italic">
+                                    Cyber<span className="text-indigo-500">Node</span>
+                                </h1>
+                            </div>
+                            <div className="flex items-center gap-6">
+                                <div className="hidden md:flex flex-col items-end">
+                                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Niveau Expert</span>
+                                    <span className="text-sm font-black text-indigo-400">{userXP} XP</span>
+                                </div>
+                                <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center font-bold">
+                                    JD
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Navigation Mobile/Desktop */}
+                    <nav className="glass-panel border-b border-white/5 p-2">
+                        <div className="max-w-6xl mx-auto flex justify-around">
+                            {[
+                                { id: 'hub', label: 'Hub Local', icon: 'globe' },
+                                { id: 'projects', label: 'Missions', icon: 'rocket' },
+                                { id: 'profile', label: 'Mon Profil', icon: 'user' }
+                            ].map(tab => (
+                                <button 
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl transition-all ${activeTab === tab.id ? 'bg-indigo-600/20 text-indigo-400 font-bold' : 'text-slate-500 hover:text-white'}`}
+                                >
+                                    <Icon name={tab.icon} size={18} />
+                                    <span className="hidden sm:inline text-xs uppercase tracking-widest">{tab.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+
+                    {/* Main Content */}
+                    <main className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 bg-slate-950/20">
+                        <div className="max-w-6xl mx-auto h-full">
+                            
+                            {/* SECTION HUB / CHAT */}
+                            {activeTab === 'hub' && (
+                                <div className="grid lg:grid-cols-3 gap-8 h-full">
+                                    <div className="lg:col-span-2 flex flex-col glass-panel rounded-[2rem] overflow-hidden border border-white/5">
+                                        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-slate-900/40">
+                                            <h2 className="font-bold flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                                Sénégal / Dakar / Médina
+                                            </h2>
+                                            <Icon name="message-square" className="text-white/20" />
+                                        </div>
+                                        <div className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                                            {messages.map(m => (
+                                                <div key={m.id} className={`flex gap-4 ${m.sender === "Moi" ? "flex-row-reverse" : ""}`}>
+                                                    <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-bold text-white/40">
+                                                        {m.sender[0]}
+                                                    </div>
+                                                    <div className={`max-w-[80%] ${m.sender === "Moi" ? "text-right" : ""}`}>
+                                                        <span className="text-[10px] font-bold text-white/20 uppercase">{m.sender} • {m.time}</span>
+                                                        <div className={`mt-1 p-4 rounded-2xl text-sm ${m.sender === "Moi" ? "bg-indigo-600 text-white rounded-tr-none" : "bg-white/5 rounded-tl-none border border-white/5"}`}>
+                                                            {m.text}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <form onSubmit={sendMessage} className="p-4 border-t border-white/5 bg-slate-900/40 flex gap-4">
+                                            <input name="msg" type="text" placeholder="Message au quartier..." className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none" />
+                                            <button type="submit" className="bg-indigo-600 p-3 rounded-xl hover:bg-indigo-500 transition-colors">
+                                                <Icon name="send" />
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div className="hidden lg:block space-y-6">
+                                        <div className="glass-panel p-6 rounded-[2rem] border border-white/5">
+                                            <h3 className="text-xs font-black text-indigo-400 uppercase tracking-[0.2em] mb-4">Experts à proximité</h3>
+                                            <div className="space-y-4">
+                                                {["Moussa K.", "Awa S.", "Cheikh T."].map(ex => (
+                                                    <div key={ex} className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-slate-800 border border-white/5 flex items-center justify-center text-[10px]">P</div>
+                                                        <span className="text-sm font-bold text-white/70">{ex}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* SECTION MISSIONS */}
+                            {activeTab === 'projects' && (
+                                <div className="space-y-8">
+                                    <div className="flex justify-between items-end">
+                                        <div>
+                                            <h2 className="text-3xl font-black italic uppercase tracking-tighter">Missions <span className="text-indigo-500">Actives</span></h2>
+                                            <p className="text-white/30 text-xs mt-2 uppercase tracking-widest">Collaborez pour sécuriser votre zone</p>
+                                        </div>
+                                        <button className="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                                            <Icon name="plus" size={16} /> Lancer une mission
+                                        </button>
+                                    </div>
+                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {projects.map(p => (
+                                            <div key={p.id} className="glass-panel p-8 rounded-[2.5rem] border border-white/5 group hover:border-indigo-500/50 transition-all">
+                                                <div className="flex justify-between items-start mb-6">
+                                                    <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-2xl"><Icon name="target" /></div>
+                                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${p.status === 'Terminé' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                                        {p.status}
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-lg font-black group-hover:text-indigo-400 transition-colors">{p.title}</h3>
+                                                <p className="text-xs text-white/40 mt-3 leading-relaxed">{p.desc}</p>
+                                                <div className="mt-6 flex items-center justify-between">
+                                                    <span className="text-[10px] font-bold text-white/20 uppercase">Lead: {p.lead}</span>
+                                                    {p.status !== "Terminé" && (
+                                                        <button onClick={() => completeProject(p.id)} className="text-[10px] font-black text-indigo-400 hover:text-white uppercase underline">Valider</button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* SECTION PROFIL */}
+                            {activeTab === 'profile' && (
+                                <div className="max-w-3xl mx-auto space-y-12">
+                                    <div className="glass-panel p-12 rounded-[3.5rem] text-center relative overflow-hidden border border-white/5">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-600 to-transparent"></div>
+                                        <div className="w-24 h-24 bg-indigo-600 mx-auto rounded-3xl flex items-center justify-center text-3xl font-black mb-6 shadow-2xl shadow-indigo-600/40 border border-white/10">
+                                            JD
+                                        </div>
+                                        <h2 className="text-3xl font-black tracking-tighter uppercase">Jean Diop</h2>
+                                        <p className="text-indigo-400 font-bold uppercase text-xs tracking-[0.3em] mt-2">Expert Cybersécurité</p>
+                                        
+                                        <div className="mt-10 flex justify-center gap-12">
+                                            <div className="text-center">
+                                                <p className="text-3xl font-black text-white">{userXP}</p>
+                                                <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Points XP</p>
+                                            </div>
+                                            <div className="w-px h-12 bg-white/5"></div>
+                                            <div className="text-center">
+                                                <p className="text-3xl font-black text-white">{badges.length}</p>
+                                                <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Badges</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <h3 className="text-[11px] font-black text-white/20 uppercase tracking-[0.4em] text-center">Collection de Certifications</h3>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            {badges.map(b => (
+                                                <div key={b.id} className="glass-panel p-6 rounded-3xl text-center border border-white/5 badge-glow">
+                                                    <div className={`w-12 h-12 mx-auto rounded-xl bg-white/5 flex items-center justify-center mb-4 ${b.color}`}>
+                                                        <Icon name={b.icon} size={24} />
+                                                    </div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest">{b.title}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="p-6 text-center border-t border-white/5 bg-slate-950">
+                        <p className="text-[9px] font-bold text-white/10 uppercase tracking-[0.6em]">Système Cyber-Node v1.0 &bull; Décentralisé</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
+
